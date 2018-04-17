@@ -72,7 +72,7 @@ Configuration Main
 	$dbdestination = "C:\SQDATA\AdventureWorks2012.bak"
 	Invoke-WebRequest $dbsource -OutFile $dbdestination 
 
-	$mdf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("AdventureWorks2012_Data", "F:\Data\AdventureWorks2012.mdf")
+	$mdf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("AdventureWorks2012", "F:\Data\AdventureWorks2012.mdf")
 	$ldf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("AdventureWorks2012_Log", "F:\Logs\AdventureWorks2012.ldf")
 
 	# Restore the database from the backup
