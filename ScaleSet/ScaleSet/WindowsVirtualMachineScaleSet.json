@@ -154,7 +154,8 @@
     "SQLDISK1": "[concat('http://',variables('cloudshopName'),'.blob.core.windows.net/','vhds','/','dataDisk1.vhd')]",
     "SQLDISK2": "[concat('http://',variables('cloudshopName'),'.blob.core.windows.net/','vhds','/','dataDisk2.vhd')]",
     "SQLDSCArchiveFolder": "DSC",
-    "SQLDSCArchiveFileName": "SQLDSC.zip"
+    "SQLDSCArchiveFileName": "SQLDSC.zip",
+    "wadProcessorMetricName": "Percentage CPU"
 
 
   },
@@ -792,6 +793,73 @@
           }
         }
       ]
+    },
+    {
+      "name": "autoscalewad",
+      "type": "Microsoft.Insights/autoscaleSettings",
+      "location": "[variables('location')]",
+      "apiVersion": "2015-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]"
+      ],
+      "tags": {
+        "displayName": "autoscaleweb AutoScale"
+      },
+      "properties": {
+        "name": "autoscalewad",
+        "targetResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+        "enabled": true,
+        "profiles": [
+          {
+            "name": "Profile1",
+            "capacity": {
+              "minimum": "1",
+              "maximum": "4",
+              "default": "1"
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "[variables('wadProcessorMetricName')]",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT5M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": 70
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT5M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "[variables('wadProcessorMetricName')]",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', variables('namingInfix'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT5M",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": 40
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT5M"
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
