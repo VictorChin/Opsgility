@@ -1,0 +1,72 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmstorageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Premium_LRS"
+      ]
+    }
+  },
+  "variables": {
+    "OPSTrainingVNETPrefix": "10.0.0.0/16",
+    "OPSTrainingVNETSubnet1Name": "FrontendNetwork",
+    "OPSTrainingVNETSubnet1Prefix": "10.0.0.0/24",
+    "OPSTrainingVNETSubnet2Name": "BackendNetwork",
+    "OPSTrainingVNETSubnet2Prefix": "10.0.1.0/24",
+    "vmstorageName": "[concat('vmstorage', uniqueString(resourceGroup().id))]"
+  },
+  "resources": [
+    {
+      "name": "OPSTrainingVNET",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "OPSTrainingVNET"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('OPSTrainingVNETPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('OPSTrainingVNETSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('OPSTrainingVNETSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('OPSTrainingVNETSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('OPSTrainingVNETSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('vmstorageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('vmstorageType')]"
+      },
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "vmstorage"
+      },
+      "kind": "Storage"
+    }
+  ],
+  "outputs": {
+  }
+
+}
