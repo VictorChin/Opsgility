@@ -2,5 +2,22 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "WebVMName": {
+      "value": "WebVM"
+    },
+    "WebVMAdminUserName": {
+      "value": "chinzilla"
+    },
+    "WebVMAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/46028f71-3f52-412a-8de2-1e80dd06896d/resourceGroups/cloudwise/providers/Microsoft.KeyVault/vaults/Demovmkv"
+        },
+        "secretName": "vmpass"
+      }
+    },
+    "WebVM-PIPDnsName": {
+      "value": "chinzillawebvmdemo"
+    }
   }
 }
