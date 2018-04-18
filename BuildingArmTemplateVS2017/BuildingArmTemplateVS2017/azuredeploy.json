@@ -9,6 +9,31 @@
         "Standard_LRS",
         "Premium_LRS"
       ]
+    },
+    "WebVMName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "WebVMAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "WebVMAdminPassword": {
+      "type": "securestring"
+    },
+    "WebVMWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    },
+    "WebVM-PIPDnsName": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "variables": {
@@ -17,7 +42,16 @@
     "OPSTrainingVNETSubnet1Prefix": "10.0.0.0/24",
     "OPSTrainingVNETSubnet2Name": "BackendNetwork",
     "OPSTrainingVNETSubnet2Prefix": "10.0.1.0/24",
-    "vmstorageName": "[concat('vmstorage', uniqueString(resourceGroup().id))]"
+    "vmstorageName": "[concat('vmstorage', uniqueString(resourceGroup().id))]",
+    "WebVMImagePublisher": "MicrosoftWindowsServer",
+    "WebVMImageOffer": "WindowsServer",
+    "WebVMOSDiskName": "WebVMOSDisk",
+    "WebVMVmSize": "Standard_DS1_v2",
+    "WebVMVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'OPSTrainingVNET')]",
+    "WebVMSubnetRef": "[concat(variables('WebVMVnetID'), '/subnets/', variables('OPSTrainingVNETSubnet1Name'))]",
+    "WebVMStorageAccountContainerName": "vhds",
+    "WebVMNicName": "[concat(parameters('WebVMName'), 'NetworkInterface')]",
+    "WebVM-PIPName": "WebVM-PIP"
   },
   "resources": [
     {
@@ -64,6 +98,97 @@
         "displayName": "vmstorage"
       },
       "kind": "Storage"
+    },
+    {
+      "name": "[variables('WebVMNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'OPSTrainingVNET')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('WebVM-PIPName'))]"
+      ],
+      "tags": {
+        "displayName": "WebVMNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('WebVMSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('WebVM-PIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('WebVMName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('vmstorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('WebVMNicName'))]"
+      ],
+      "tags": {
+        "displayName": "WebVM"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('WebVMVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('WebVMName')]",
+          "adminUsername": "[parameters('WebVMAdminUsername')]",
+          "adminPassword": "[parameters('WebVMAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('WebVMImagePublisher')]",
+            "offer": "[variables('WebVMImageOffer')]",
+            "sku": "[parameters('WebVMWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "WebVMOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('vmstorageName')), '2016-01-01').primaryEndpoints.blob, variables('WebVMStorageAccountContainerName'), '/', variables('WebVMOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('WebVMNicName'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[variables('WebVM-PIPName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "WebVM-PIP"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('WebVM-PIPDnsName')]"
+        }
+      }
     }
   ],
   "outputs": {
