@@ -46,6 +46,10 @@
       "metadata": {
         "description": "Auto-generated token to access _artifactsLocation"
       }
+    },
+    "WebPackage": {
+      "type": "string",
+      "defaultValue": "https://github.com/opsgility/lab-support-public/blob/master/assets/cloudshop.zip?raw=true"
     }
   },
   "variables": {
@@ -211,7 +215,8 @@
                 "function": "Main"
               },
               "configurationArguments": {
-                "nodeName": "[parameters('WebVMName')]"
+                "nodeName": "[parameters('WebVMName')]",
+                "webDeployPackage": "[parameters('WebPackage')]"
               }
             },
             "protectedSettings": {
